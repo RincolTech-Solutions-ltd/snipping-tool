@@ -1,11 +1,5 @@
 """
 Entry point for Snipping Tool.
-
-Provides:
-  - Mode-chooser toolbar (Windows-style top-center popup)
-  - Global hotkey: Ctrl+Shift+S (via keybinder)
-  - System tray icon
-  - Delay capture support
 """
 
 import sys
@@ -38,45 +32,48 @@ MODES = [
 ]
 
 
+def get_active_monitor_geometry():
+    """Return geometry of the monitor containing the pointer."""
+    display = Gdk.Display.get_default()
+    seat = display.get_default_seat()
+    pointer = seat.get_pointer()
+    _screen, px, py = pointer.get_position()
+    monitor = display.get_monitor_at_point(px, py)
+    return monitor.get_geometry()
+
+
 class ModeChooser(Gtk.Window):
-    """Top-centre toolbar that appears when the hotkey is pressed."""
+    """Top-centre toolbar on the active monitor."""
 
     def __init__(self, on_mode_selected, on_cancel):
         super().__init__(type=Gtk.WindowType.TOPLEVEL)
         self._on_mode_selected = on_mode_selected
         self._on_cancel = on_cancel
 
+        self.set_title("Snipping Tool")
         self.set_decorated(False)
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
         self.set_keep_above(True)
-        self.set_app_paintable(True)
         self.set_resizable(False)
-
-        screen = Gdk.Screen.get_default()
-        visual = screen.get_rgba_visual()
-        if visual:
-            self.set_visual(visual)
 
         self._build_ui()
         self.show_all()
         self._position()
-        self.grab_focus()
+        self.present()
+        # Only close on Escape — no focus-out close (it fires too aggressively)
         self.connect("key-press-event", self._on_key)
-        # Delay focus-out handler so the window manager has time to settle
-        GLib.timeout_add(500, lambda: self.connect("focus-out-event", lambda *_: self._cancel()) or False)
 
     def _build_ui(self):
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        box.set_margin_start(12)
-        box.set_margin_end(12)
+        box.set_margin_start(14)
+        box.set_margin_end(14)
         box.set_margin_top(10)
         box.set_margin_bottom(10)
 
-        lbl = Gtk.Label(label="Snipping Tool")
-        lbl.get_style_context().add_class("dim-label")
+        lbl = Gtk.Label(label="  Snipping Tool  ")
         box.pack_start(lbl, False, False, 0)
-        box.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 10)
+        box.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 8)
 
         for mode_id, label in MODES:
             btn = Gtk.Button(label=label)
@@ -84,22 +81,28 @@ class ModeChooser(Gtk.Window):
             btn.connect("clicked", self._on_btn_clicked, mode_id)
             box.pack_start(btn, False, False, 4)
 
-        box.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 10)
-
-        box.pack_start(Gtk.Label(label="Delay:"), False, False, 0)
+        box.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 8)
+        box.pack_start(Gtk.Label(label=" Delay: "), False, False, 0)
         self._delay_spin = Gtk.SpinButton.new_with_range(0, 10, 1)
         self._delay_spin.set_value(0)
         self._delay_spin.set_width_chars(2)
-        self._delay_spin.set_tooltip_text("Delay in seconds before capture")
         box.pack_start(self._delay_spin, False, False, 4)
-        box.pack_start(Gtk.Label(label="s"), False, False, 0)
+        box.pack_start(Gtk.Label(label="s   "), False, False, 0)
+
+        close_btn = Gtk.Button(label="✕")
+        close_btn.set_relief(Gtk.ReliefStyle.NONE)
+        close_btn.connect("clicked", lambda _: self._cancel())
+        box.pack_start(close_btn, False, False, 0)
 
         self.add(box)
 
     def _position(self):
-        sw = Gdk.Screen.get_default().get_width()
+        geo = get_active_monitor_geometry()
         w, _ = self.get_size()
-        self.move((sw - w) // 2, 0)
+        # Centre horizontally on active monitor, sit at very top
+        x = geo.x + (geo.width - w) // 2
+        y = geo.y
+        self.move(x, y)
 
     def _on_btn_clicked(self, _btn, mode_id: str):
         delay = int(self._delay_spin.get_value())
@@ -124,7 +127,8 @@ class SnippingApp:
         self._chooser = None
         self._setup_tray()
         self._setup_hotkey()
-        self.show_mode_chooser()
+        # Show chooser once the main loop is running
+        GLib.idle_add(self.show_mode_chooser)
 
     def _setup_tray(self):
         try:
@@ -148,7 +152,7 @@ class SnippingApp:
             item.connect("activate", lambda _, m=mode_id: self._start_capture(m, 0))
             menu.append(item)
         menu.append(Gtk.SeparatorMenuItem())
-        about = Gtk.MenuItem(label=f"About")
+        about = Gtk.MenuItem(label="About")
         about.connect("activate", lambda _: self._show_about())
         menu.append(about)
         quit_item = Gtk.MenuItem(label="Quit")
@@ -162,10 +166,14 @@ class SnippingApp:
             return
         Keybinder.init()
         if not Keybinder.bind(HOTKEY, lambda *_: GLib.idle_add(self.show_mode_chooser), None):
-            print(f"Warning: could not bind {HOTKEY} — use the tray icon or relaunch.")
+            print(f"Warning: could not bind {HOTKEY}. Set it manually in System Settings → Keyboard Shortcuts.")
 
     def show_mode_chooser(self, *_):
         if self._chooser:
+            try:
+                self._chooser.present()
+            except Exception:
+                pass
             return
         self._chooser = ModeChooser(
             on_mode_selected=self._start_capture,
@@ -204,7 +212,7 @@ class SnippingApp:
 
 
 def main():
-    app = SnippingApp()
+    SnippingApp()
     Gtk.main()
 
 
