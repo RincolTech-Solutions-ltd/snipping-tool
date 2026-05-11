@@ -55,11 +55,13 @@ def _capture_region(x: int, y: int, width: int, height: int) -> Image.Image:
 
 def image_to_pixbuf(img: Image.Image) -> GdkPixbuf.Pixbuf:
     """Convert a PIL Image to a GdkPixbuf for display in GTK."""
+    from gi.repository import GLib
     if img.mode != "RGBA":
         img = img.convert("RGBA")
     data = img.tobytes()
+    gbytes = GLib.Bytes.new(data)
     return GdkPixbuf.Pixbuf.new_from_bytes(
-        data_bytes := __import__("gi.repository.GLib", fromlist=["Bytes"]).Bytes.new(data),
+        gbytes,
         GdkPixbuf.Colorspace.RGB,
         True,
         8,
