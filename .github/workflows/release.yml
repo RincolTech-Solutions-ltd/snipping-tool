@@ -1,0 +1,59 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-gi python3-gi-cairo python3-pil python3-cairo \
+            gir1.2-gtk-3.0 gir1.2-keybinder-3.0 libkeybinder-3.0-0 \
+            xclip dpkg-dev
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=$(grep __version__ src/snipping_tool/__init__.py | cut -d'\"' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Build .deb
+        run: ./build-deb.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snipping-tool-deb
+          path: snipping-tool_*.deb
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: snipping-tool_*.deb
+          body: |
+            ## Snipping Tool ${{ steps.version.outputs.VERSION }}
+
+            ### Install
+
+            ```bash
+            sudo dpkg -i snipping-tool_${{ steps.version.outputs.VERSION }}_all.deb
+            sudo apt-get install -f
+            ```
+
+            ### What's included
+            - All 4 snip modes (rectangular, freeform, window, full-screen)
+            - Full annotation editor (pen, highlighter, arrow, shapes, text, eraser)
+            - Global hotkey: Ctrl+Shift+S
+            - System tray support
+            - Auto-copy to clipboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.deb
+packaging/debian/opt/
+packaging/debian/usr/bin/
+packaging/debian/usr/share/
+.venv/
+venv/
+.env

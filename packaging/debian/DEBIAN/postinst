@@ -1,0 +1,25 @@
+#!/bin/sh
+# Post-installation script
+
+set -e
+
+# Update icon cache
+if command -v gtk-update-icon-cache > /dev/null 2>&1; then
+    gtk-update-icon-cache -f -t /usr/share/icons/hicolor/ || true
+fi
+
+# Update desktop database
+if command -v update-desktop-database > /dev/null 2>&1; then
+    update-desktop-database /usr/share/applications/ || true
+fi
+
+echo "Snipping Tool installed successfully."
+echo "Launch it from your applications menu or run: snipping-tool"
+echo ""
+echo "To enable the global hotkey (Ctrl+Shift+S):"
+echo "  System Settings → Keyboard → Shortcuts → Custom → Add"
+echo "  Name: Snipping Tool"
+echo "  Command: snipping-tool"
+echo "  Key: Ctrl+Shift+S"
+
+exit 0

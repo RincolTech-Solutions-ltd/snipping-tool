@@ -1,0 +1,32 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Snipping Tool
+GenericName=Screenshot Tool
+Comment=Capture and annotate screenshots — works just like Windows Snipping Tool
+Exec=snipping-tool %U
+Icon=snipping-tool
+Terminal=false
+StartupNotify=false
+Categories=Graphics;Photography;Utility;
+Keywords=screenshot;snip;capture;annotate;screen;
+MimeType=image/png;image/jpeg;
+X-GNOME-Autostart-enabled=false
+X-Ubuntu-Gettext-Domain=snipping-tool
+Actions=Rectangular;Freeform;Window;Fullscreen;
+
+[Desktop Action Rectangular]
+Name=Rectangular Snip
+Exec=snipping-tool --mode rect
+
+[Desktop Action Freeform]
+Name=Freeform Snip
+Exec=snipping-tool --mode freeform
+
+[Desktop Action Window]
+Name=Window Snip
+Exec=snipping-tool --mode window
+
+[Desktop Action Fullscreen]
+Name=Full Screen Snip
+Exec=snipping-tool --mode fullscreen

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#1a73e8" opacity="0.92"/>
+
+  <!-- Scissors body -->
+  <g fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Left blade -->
+    <path d="M 14 50 L 34 26"/>
+    <!-- Right blade -->
+    <path d="M 50 50 L 34 26"/>
+    <!-- Pivot -->
+    <circle cx="34" cy="26" r="3" fill="white" stroke="none"/>
+    <!-- Handle rings -->
+    <circle cx="13" cy="51" r="5" stroke="white" fill="none"/>
+    <circle cx="51" cy="51" r="5" stroke="white" fill="none"/>
+  </g>
+
+  <!-- Dashed selection rectangle -->
+  <rect x="10" y="10" width="44" height="30" rx="2"
+        fill="none" stroke="white" stroke-width="2"
+        stroke-dasharray="5,3" opacity="0.8"/>
+
+  <!-- Corner dots -->
+  <circle cx="10" cy="10" r="2.5" fill="white"/>
+  <circle cx="54" cy="10" r="2.5" fill="white"/>
+  <circle cx="10" cy="40" r="2.5" fill="white"/>
+  <circle cx="54" cy="40" r="2.5" fill="white"/>
+</svg>
