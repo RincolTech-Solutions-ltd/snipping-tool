@@ -14,6 +14,7 @@ Displays the captured image and lets the user annotate it with:
 import os
 import io
 import math
+from datetime import datetime
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Callable
 
@@ -335,6 +336,7 @@ class EditorWindow(Gtk.Window):
         self._image = image
         self._on_close = on_close
         self._saved_path: Optional[str] = None
+        self._auto_filename = self._make_filename()
 
         self.set_default_size(min(image.width + 40, 1400), min(image.height + 140, 900))
         self.set_resizable(True)
@@ -344,11 +346,22 @@ class EditorWindow(Gtk.Window):
         self.connect("delete-event", self._on_delete)
         self.show_all()
 
-        # Auto-copy to clipboard on open
+        # Auto-save to ~/Pictures and copy to clipboard
         try:
             copy_image_to_clipboard(image)
         except Exception:
             pass
+        try:
+            image.convert("RGB").save(self._auto_filename, "PNG")
+        except Exception:
+            pass
+
+    @staticmethod
+    def _make_filename() -> str:
+        pictures = os.path.join(os.path.expanduser("~"), "Pictures")
+        os.makedirs(pictures, exist_ok=True)
+        ts = datetime.now().strftime("%d%m%y%H%M%S")
+        return os.path.join(pictures, f"scst_{ts}.png")
 
     # ------------------------------------------------------------------
     # UI construction
@@ -390,7 +403,7 @@ class EditorWindow(Gtk.Window):
         vbox.pack_start(scroll, True, True, 0)
 
         # Status bar
-        self._status = Gtk.Label(label=f"  {self._image.width} x {self._image.height} px   |   Copied to clipboard")
+        self._status = Gtk.Label(label=f"  {self._image.width} x {self._image.height} px   |   Saved to {self._auto_filename}")
         self._status.set_xalign(0)
         self._status.get_style_context().add_class("dim-label")
         vbox.pack_start(self._status, False, False, 4)
@@ -491,7 +504,15 @@ class EditorWindow(Gtk.Window):
             Gtk.STOCK_SAVE, Gtk.ResponseType.OK,
         )
         dialog.set_do_overwrite_confirmation(True)
-        dialog.set_current_name("screenshot.png")
+
+        # Default folder: ~/Pictures (create if missing)
+        pictures_dir = os.path.join(os.path.expanduser("~"), "Pictures")
+        os.makedirs(pictures_dir, exist_ok=True)
+        dialog.set_current_folder(pictures_dir)
+
+        # Default filename: scst_DDMMYYHHmmss.png
+        timestamp = datetime.now().strftime("%d%m%y%H%M%S")
+        dialog.set_current_name(f"scst_{timestamp}.png")
 
         for name, pattern in [("PNG Image", "*.png"), ("JPEG Image", "*.jpg"), ("All Files", "*")]:
             f = Gtk.FileFilter()
