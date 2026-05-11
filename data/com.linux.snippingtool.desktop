@@ -13,7 +13,7 @@ Keywords=screenshot;snip;capture;annotate;screen;
 MimeType=image/png;image/jpeg;
 X-GNOME-Autostart-enabled=false
 X-Ubuntu-Gettext-Domain=snipping-tool
-Actions=Rectangular;Freeform;Window;Fullscreen;
+Actions=Rectangular;Freeform;Fullscreen;
 
 [Desktop Action Rectangular]
 Name=Rectangular Snip
@@ -22,10 +22,6 @@ Exec=snipping-tool --mode rect
 [Desktop Action Freeform]
 Name=Freeform Snip
 Exec=snipping-tool --mode freeform
-
-[Desktop Action Window]
-Name=Window Snip
-Exec=snipping-tool --mode window
 
 [Desktop Action Fullscreen]
 Name=Full Screen Snip

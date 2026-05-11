@@ -27,7 +27,6 @@ HOTKEY = "<Ctrl><Shift>s"
 MODES = [
     ("rect",       "Rectangular"),
     ("freeform",   "Freeform"),
-    ("window",     "Window"),
     ("fullscreen", "Full Screen"),
 ]
 
