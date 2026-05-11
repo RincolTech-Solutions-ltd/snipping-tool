@@ -63,7 +63,8 @@ class ModeChooser(Gtk.Window):
         self._position()
         self.grab_focus()
         self.connect("key-press-event", self._on_key)
-        self.connect("focus-out-event", lambda *_: self._cancel())
+        # Delay focus-out handler so the window manager has time to settle
+        GLib.timeout_add(500, lambda: self.connect("focus-out-event", lambda *_: self._cancel()) or False)
 
     def _build_ui(self):
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
