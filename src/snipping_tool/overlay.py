@@ -7,6 +7,7 @@ top of the frozen image. No system-level grabs — no freeze risk.
 """
 
 import math
+import subprocess
 from typing import Callable, List, Optional, Tuple
 
 import gi
@@ -18,6 +19,36 @@ import cairo
 from PIL import Image
 
 from .capture import capture_screen, capture_region
+
+
+def _get_open_windows():
+    """Return list of (x, y, w, h, title) for all visible windows via wmctrl."""
+    try:
+        out = subprocess.check_output(["wmctrl", "-lG"], text=True)
+        windows = []
+        for line in out.splitlines():
+            parts = line.split(None, 8)
+            if len(parts) < 8:
+                continue
+            desktop = int(parts[1])
+            if desktop == -1:           # skip sticky/hidden windows
+                continue
+            x, y, w, h = int(parts[2]), int(parts[3]), int(parts[4]), int(parts[5])
+            title = parts[7] if len(parts) > 7 else ""
+            if w > 10 and h > 10:
+                windows.append((x, y, w, h, title))
+        return windows
+    except Exception:
+        return []
+
+
+def _window_at(windows, px, py):
+    """Return the topmost window that contains point (px, py)."""
+    # wmctrl lists in stacking order (bottom first), so reverse for topmost
+    for x, y, w, h, title in reversed(windows):
+        if x <= px <= x + w and y <= py <= y + h:
+            return x, y, w, h, title
+    return None
 
 SnipMode = str  # "rect" | "freeform" | "window" | "fullscreen"
 
@@ -42,6 +73,10 @@ class SelectionOverlay(Gtk.Window):
         self._start: Optional[Tuple[int, int]] = None
         self._cur: Optional[Tuple[int, int]] = None
         self._freeform: List[Tuple[int, int]] = []
+        self._hovered_win = None   # (x, y, w, h) currently highlighted
+
+        # Snapshot open windows BEFORE the overlay appears (window mode)
+        self._windows = _get_open_windows() if mode == "window" else []
 
         # Capture screen BEFORE showing anything
         try:
@@ -159,28 +194,19 @@ class SelectionOverlay(Gtk.Window):
         cr.show_text(txt)
 
     def _draw_window_hint(self, cr):
-        # Highlight the window region under the cursor
-        disp = Gdk.Display.get_default()
-        seat = disp.get_default_seat()
-        ptr = seat.get_pointer()
-        _sc, px, py = ptr.get_position()
-        screen = disp.get_default_screen()
-        win = screen.get_window_at_pointer()
-        if win and win[0]:
-            orig = win[0].get_origin()
-            geom = win[0].get_geometry()
-            _, ox, oy = orig
-            _, _gx, _gy, gw, gh = geom
-            cr.save()
-            cr.set_operator(cairo.OPERATOR_SOURCE)
-            cr.set_source_surface(self._bg_surface, 0, 0)
-            cr.rectangle(ox, oy, gw, gh)
-            cr.fill()
-            cr.restore()
-            cr.set_source_rgba(0.2, 0.55, 1.0, 0.9)
-            cr.set_line_width(3)
-            cr.rectangle(ox + 1, oy + 1, gw - 2, gh - 2)
-            cr.stroke()
+        if not self._hovered_win:
+            return
+        ox, oy, gw, gh = self._hovered_win
+        cr.save()
+        cr.set_operator(cairo.OPERATOR_SOURCE)
+        cr.set_source_surface(self._bg_surface, 0, 0)
+        cr.rectangle(ox, oy, gw, gh)
+        cr.fill()
+        cr.restore()
+        cr.set_source_rgba(0.2, 0.55, 1.0, 0.9)
+        cr.set_line_width(3)
+        cr.rectangle(ox + 1, oy + 1, gw - 2, gh - 2)
+        cr.stroke()
 
     # ------------------------------------------------------------------
     # Events
@@ -202,7 +228,14 @@ class SelectionOverlay(Gtk.Window):
         self._cur = (int(ev.x_root), int(ev.y_root))
         if self._dragging and self._mode == "freeform":
             self._freeform.append(self._cur)
-        self.queue_draw()
+        if self._mode == "window":
+            hit = _window_at(self._windows, self._cur[0], self._cur[1])
+            new_win = (hit[0], hit[1], hit[2], hit[3]) if hit else None
+            if new_win != self._hovered_win:
+                self._hovered_win = new_win
+                self.queue_draw()
+        else:
+            self.queue_draw()
 
     def _release(self, _w, ev: Gdk.EventButton):
         if ev.button != 1 or not self._dragging:
@@ -269,16 +302,10 @@ class SelectionOverlay(Gtk.Window):
         self._on_captured(result)
 
     def _capture_window(self):
-        disp = Gdk.Display.get_default()
-        screen = disp.get_default_screen()
-        win = screen.get_window_at_pointer()
-        if not win or not win[0]:
+        if not self._hovered_win:
             self._cancel()
             return
-        orig = win[0].get_origin()
-        geom = win[0].get_geometry()
-        _, ox, oy = orig
-        _, _gx, _gy, gw, gh = geom
+        ox, oy, gw, gh = self._hovered_win
         img = self._full_img.crop((ox, oy, ox + gw, oy + gh))
         self._close()
         self._on_captured(img)
