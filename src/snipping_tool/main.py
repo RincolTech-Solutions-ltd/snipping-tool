@@ -128,8 +128,8 @@ class SnippingApp:
         self._chooser = None
         self._setup_tray()
         self._setup_hotkey()
-        # Show chooser once the main loop is running
-        GLib.idle_add(self.show_mode_chooser)
+        # Go straight to rectangular mode by default
+        GLib.idle_add(lambda: self._start_capture("rect", 0))
 
     def _setup_tray(self):
         try:
@@ -197,7 +197,7 @@ class SnippingApp:
         return False
 
     def _open_editor(self, image):
-        EditorWindow(image, on_new_snip=self.show_mode_chooser)
+        EditorWindow(image, on_new_snip=lambda: self._start_capture("rect", 0))
         return False
 
     def _show_about(self):
