@@ -535,6 +535,25 @@ class EditorWindow(Gtk.Window):
         dialog.destroy()
 
     def _on_new(self, _btn):
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            text="Start a new snip?",
+            secondary_text="The current screenshot is auto-saved to ~/Pictures. "
+                           "Save your annotations now, or discard them.",
+        )
+        dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
+        dialog.add_button("Discard & New Snip", Gtk.ResponseType.NO)
+        dialog.add_button("Save & New Snip", Gtk.ResponseType.YES)
+        dialog.set_default_response(Gtk.ResponseType.YES)
+        response = dialog.run()
+        dialog.destroy()
+
+        if response == Gtk.ResponseType.CANCEL:
+            return
+        if response == Gtk.ResponseType.YES:
+            self._on_save(None)
         self.destroy()
         if self._on_new_snip:
             self._on_new_snip()
