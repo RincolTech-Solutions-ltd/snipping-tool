@@ -436,18 +436,18 @@ class EditorWindow(Gtk.Window):
 
         bar.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 4)
 
-        # Color buttons
+        # Color buttons — red is selected by default
+        self._color_buttons = {}
         for color_name, rgba in COLORS:
             btn = Gtk.Button()
             btn.set_size_request(26, 26)
             btn.set_tooltip_text(color_name)
-            r, g, b, a = rgba
-            css = f"button {{ background: rgb({int(r*255)},{int(g*255)},{int(b*255)}); min-width: 26px; min-height: 26px; padding: 0; border-radius: 50%; }}"
-            provider = Gtk.CssProvider()
-            provider.load_from_data(css.encode())
-            btn.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-            btn.connect("clicked", self._on_color_clicked, rgba)
+            btn.connect("clicked", self._on_color_clicked, rgba, color_name)
+            self._color_buttons[color_name] = (btn, rgba)
             bar.pack_start(btn, False, False, 2)
+
+        self._selected_color_name = "Red"
+        self._refresh_color_buttons()
 
         bar.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 4)
 
@@ -480,8 +480,28 @@ class EditorWindow(Gtk.Window):
         if btn.get_active():
             self._canvas.set_tool(tool_id)
 
-    def _on_color_clicked(self, _btn, rgba):
+    def _on_color_clicked(self, _btn, rgba, color_name):
+        self._selected_color_name = color_name
         self._canvas.set_color(*rgba)
+        self._refresh_color_buttons()
+
+    def _refresh_color_buttons(self):
+        for name, (btn, rgba) in self._color_buttons.items():
+            r, g, b, a = rgba
+            selected = (name == self._selected_color_name)
+            ring = "box-shadow: 0 0 0 3px white, 0 0 0 5px rgba(0,0,0,0.6);" if selected else ""
+            css = (
+                f"button {{ background: rgb({int(r*255)},{int(g*255)},{int(b*255)}); "
+                f"min-width: 26px; min-height: 26px; padding: 0; border-radius: 50%; "
+                f"border: none; {ring} }}"
+            )
+            provider = Gtk.CssProvider()
+            provider.load_from_data(css.encode())
+            ctx = btn.get_style_context()
+            # Remove old providers first
+            for p in ctx.list_providers():
+                ctx.remove_provider(p)
+            ctx.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     def _on_size_changed(self, spin):
         self._canvas.set_size(spin.get_value())

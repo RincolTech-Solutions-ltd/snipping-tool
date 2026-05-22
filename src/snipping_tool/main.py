@@ -77,6 +77,8 @@ class ModeChooser(Gtk.Window):
         for mode_id, label in MODES:
             btn = Gtk.Button(label=label)
             btn.set_relief(Gtk.ReliefStyle.NONE)
+            if mode_id == "rect":
+                btn.get_style_context().add_class("suggested-action")
             btn.connect("clicked", self._on_btn_clicked, mode_id)
             box.pack_start(btn, False, False, 4)
 
