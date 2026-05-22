@@ -485,7 +485,7 @@ class EditorWindow(Gtk.Window):
     # ------------------------------------------------------------------
 
     def _on_tool_toggled(self, btn: Gtk.RadioButton, tool_id: str):
-        if btn.get_active():
+        if btn.get_active() and hasattr(self, "_canvas"):
             self._canvas.set_tool(tool_id)
 
     def _on_color_clicked(self, _btn, rgba, color_name):
