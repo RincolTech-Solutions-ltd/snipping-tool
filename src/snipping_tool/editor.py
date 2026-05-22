@@ -445,6 +445,7 @@ class EditorWindow(Gtk.Window):
 
         # Color buttons — red is selected by default
         self._color_buttons = {}
+        self._color_providers = {}
         for color_name, rgba in COLORS:
             btn = Gtk.Button()
             btn.set_size_request(26, 26)
@@ -496,7 +497,7 @@ class EditorWindow(Gtk.Window):
         for name, (btn, rgba) in self._color_buttons.items():
             r, g, b, a = rgba
             selected = (name == self._selected_color_name)
-            ring = "box-shadow: 0 0 0 3px white, 0 0 0 5px rgba(0,0,0,0.6);" if selected else ""
+            ring = "box-shadow: 0 0 0 3px white, 0 0 0 5px rgba(0,0,0,0.5);" if selected else ""
             css = (
                 f"button {{ background: rgb({int(r*255)},{int(g*255)},{int(b*255)}); "
                 f"min-width: 26px; min-height: 26px; padding: 0; border-radius: 50%; "
@@ -505,10 +506,11 @@ class EditorWindow(Gtk.Window):
             provider = Gtk.CssProvider()
             provider.load_from_data(css.encode())
             ctx = btn.get_style_context()
-            # Remove old providers first
-            for p in ctx.list_providers():
-                ctx.remove_provider(p)
+            # Remove previous provider for this button before adding new one
+            if name in self._color_providers:
+                ctx.remove_provider(self._color_providers[name])
             ctx.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+            self._color_providers[name] = provider
 
     def _on_size_changed(self, spin):
         self._canvas.set_size(spin.get_value())
