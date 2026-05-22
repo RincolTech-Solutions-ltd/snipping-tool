@@ -403,6 +403,10 @@ class EditorWindow(Gtk.Window):
         scroll.add(self._canvas)
         vbox.pack_start(scroll, True, True, 0)
 
+        # Set rectangle as active tool now that canvas exists
+        self._canvas.set_tool(TOOL_RECT)
+        self._canvas.set_color(1.0, 0.0, 0.0, 1.0)
+
         # Status bar
         self._status = Gtk.Label(label=f"  {self._image.width} x {self._image.height} px   |   Saved to {self._auto_filename}")
         self._status.set_xalign(0)
