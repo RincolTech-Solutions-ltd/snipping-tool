@@ -331,10 +331,11 @@ TOOLS = [
 
 class EditorWindow(Gtk.Window):
 
-    def __init__(self, image: Image.Image, on_close: Optional[Callable] = None):
+    def __init__(self, image: Image.Image, on_close: Optional[Callable] = None, on_new_snip: Optional[Callable] = None):
         super().__init__(title="Snipping Tool")
         self._image = image
         self._on_close = on_close
+        self._on_new_snip = on_new_snip
         self._saved_path: Optional[str] = None
         self._auto_filename = self._make_filename()
 
@@ -534,13 +535,9 @@ class EditorWindow(Gtk.Window):
         dialog.destroy()
 
     def _on_new(self, _btn):
-        from .main import SnippingApp
-        # Signal main app to show overlay again
-        app = Gtk.Application.get_default()
-        if app and hasattr(app, "show_mode_chooser"):
-            app.show_mode_chooser()
-        else:
-            self.destroy()
+        self.destroy()
+        if self._on_new_snip:
+            self._on_new_snip()
 
     def _on_delete(self, _widget, _event):
         if self._on_close:

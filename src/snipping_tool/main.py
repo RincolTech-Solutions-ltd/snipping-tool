@@ -195,7 +195,7 @@ class SnippingApp:
         return False
 
     def _open_editor(self, image):
-        EditorWindow(image)
+        EditorWindow(image, on_new_snip=self.show_mode_chooser)
         return False
 
     def _show_about(self):
