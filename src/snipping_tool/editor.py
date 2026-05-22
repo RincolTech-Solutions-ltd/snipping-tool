@@ -69,7 +69,7 @@ class AnnotationCanvas(Gtk.DrawingArea):
         self._strokes: List[Stroke] = []
         self._redo_stack: List[Stroke] = []
         self._current_stroke: Optional[Stroke] = None
-        self._active_tool = TOOL_PEN
+        self._active_tool = None  # no tool active on open — user must click a tool to draw
         self._color = (1.0, 0.0, 0.0, 1.0)
         self._size = 3.0
         self._text_entry_active = False
@@ -236,7 +236,7 @@ class AnnotationCanvas(Gtk.DrawingArea):
     # ------------------------------------------------------------------
 
     def _on_press(self, _widget, event: Gdk.EventButton):
-        if event.button != 1:
+        if event.button != 1 or self._active_tool is None:
             return
         x, y = event.x, event.y
 
@@ -416,7 +416,7 @@ class EditorWindow(Gtk.Window):
         bar.set_margin_top(6)
         bar.set_margin_bottom(6)
 
-        # Tool buttons
+        # Tool buttons — Rectangle is default selected
         tool_group: Optional[Gtk.RadioButton] = None
         self._tool_buttons = {}
         for tool_id, label, icon_name in TOOLS:
@@ -433,6 +433,9 @@ class EditorWindow(Gtk.Window):
             btn.connect("toggled", self._on_tool_toggled, tool_id)
             bar.pack_start(btn, False, False, 0)
             self._tool_buttons[tool_id] = btn
+
+        # Pre-select rectangle tool
+        self._tool_buttons[TOOL_RECT].set_active(True)
 
         bar.pack_start(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 4)
 
