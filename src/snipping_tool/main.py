@@ -213,6 +213,10 @@ class SnippingApp:
 
 
 def main():
+    # Set consistent WM_CLASS for all windows so the panel groups them
+    # under a single button instead of scattering separate taskbar entries.
+    GLib.set_prgname("snipping-tool")
+    GLib.set_application_name("Snipping Tool")
     SnippingApp()
     Gtk.main()
 

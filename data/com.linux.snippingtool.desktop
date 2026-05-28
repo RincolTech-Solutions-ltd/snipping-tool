@@ -8,6 +8,7 @@ Exec=snipping-tool %U
 Icon=snipping-tool
 Terminal=false
 StartupNotify=false
+StartupWMClass=snipping-tool
 Categories=Graphics;Photography;Utility;
 Keywords=screenshot;snip;capture;annotate;screen;
 MimeType=image/png;image/jpeg;

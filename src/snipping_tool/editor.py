@@ -342,6 +342,7 @@ class EditorWindow(Gtk.Window):
         self.set_default_size(min(image.width + 40, 1400), min(image.height + 140, 900))
         self.set_resizable(True)
         self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_wmclass("snipping-tool", "Snipping Tool")
 
         self._build_ui()
         self.connect("delete-event", self._on_delete)
