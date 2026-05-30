@@ -346,6 +346,7 @@ class EditorWindow(Gtk.Window):
 
         self._build_ui()
         self.connect("delete-event", self._on_delete)
+        self.connect("key-press-event", self._on_window_key)
         self.show_all()
 
         # Auto-save to ~/Pictures and copy to clipboard
@@ -587,6 +588,19 @@ class EditorWindow(Gtk.Window):
         self.destroy()
         if self._on_new_snip:
             self._on_new_snip()
+
+    def _on_window_key(self, _widget, event: Gdk.EventKey):
+        ctrl = event.state & Gdk.ModifierType.CONTROL_MASK
+        if ctrl and event.keyval == Gdk.KEY_z:
+            self._canvas.undo()
+            return True
+        elif ctrl and event.keyval == Gdk.KEY_y:
+            self._canvas.redo()
+            return True
+        elif ctrl and event.keyval == Gdk.KEY_n:
+            self._on_new(None)
+            return True
+        return False
 
     def _on_delete(self, _widget, _event):
         if self._on_close:
