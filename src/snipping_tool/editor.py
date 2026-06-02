@@ -600,6 +600,9 @@ class EditorWindow(Gtk.Window):
         elif ctrl and event.keyval == Gdk.KEY_n:
             self._on_new(None)
             return True
+        elif ctrl and event.keyval == Gdk.KEY_s:
+            self._on_save(None)
+            return True
         return False
 
     def _on_delete(self, _widget, _event):
