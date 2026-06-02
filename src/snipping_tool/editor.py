@@ -364,7 +364,7 @@ class EditorWindow(Gtk.Window):
         pictures = os.path.join(os.path.expanduser("~"), "Pictures")
         os.makedirs(pictures, exist_ok=True)
         ts = datetime.now().strftime("%d%m%y%H%M%S")
-        return os.path.join(pictures, f"scst_{ts}.png")
+        return os.path.join(pictures, f"{ts}.png")
 
     # ------------------------------------------------------------------
     # UI construction
@@ -544,7 +544,7 @@ class EditorWindow(Gtk.Window):
 
         # Default filename: scst_DDMMYYHHmmss.png
         timestamp = datetime.now().strftime("%d%m%y%H%M%S")
-        dialog.set_current_name(f"scst_{timestamp}.png")
+        dialog.set_current_name(f"{timestamp}.png")
 
         for name, pattern in [("PNG Image", "*.png"), ("JPEG Image", "*.jpg"), ("All Files", "*")]:
             f = Gtk.FileFilter()
