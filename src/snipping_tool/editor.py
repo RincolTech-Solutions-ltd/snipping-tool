@@ -22,7 +22,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
-from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, Pango
+from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, Pango, GLib
 import cairo
 from PIL import Image
 
@@ -522,8 +522,13 @@ class EditorWindow(Gtk.Window):
             img = self._canvas.get_result_image()
             copy_image_to_clipboard(img)
             self._set_status("Copied to clipboard.")
+            GLib.timeout_add(800, self._close_after_copy)
         except Exception as e:
             self._set_status(f"Copy failed: {e}")
+
+    def _close_after_copy(self):
+        self.destroy()
+        return False
 
     def _on_save(self, _btn):
         dialog = Gtk.FileChooserDialog(
@@ -596,6 +601,9 @@ class EditorWindow(Gtk.Window):
             return True
         elif ctrl and event.keyval == Gdk.KEY_y:
             self._canvas.redo()
+            return True
+        elif ctrl and event.keyval == Gdk.KEY_c:
+            self._on_copy(None)
             return True
         elif ctrl and event.keyval == Gdk.KEY_n:
             self._on_new(None)
