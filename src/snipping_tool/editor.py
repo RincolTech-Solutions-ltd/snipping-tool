@@ -172,13 +172,7 @@ class AnnotationCanvas(Gtk.DrawingArea):
         cr.set_line_width(stroke.size)
 
         if stroke.tool in (TOOL_PEN, TOOL_HIGHLIGHTER, TOOL_ERASER):
-            if len(stroke.points) < 2:
-                cr.restore()
-                return
-            cr.move_to(*stroke.points[0])
-            for pt in stroke.points[1:]:
-                cr.line_to(*pt)
-            cr.stroke()
+            self._smooth_path(cr, stroke.points)
 
         elif stroke.tool == TOOL_ARROW and stroke.p1 and stroke.p2:
             self._draw_arrow(cr, stroke.p1, stroke.p2, stroke.size)
@@ -230,6 +224,30 @@ class AnnotationCanvas(Gtk.DrawingArea):
             cr.move_to(*p2)
             cr.line_to(ax, ay)
             cr.stroke()
+
+    @staticmethod
+    def _smooth_path(cr: cairo.Context, points):
+        n = len(points)
+        if n < 2:
+            return
+        cr.move_to(*points[0])
+        if n == 2:
+            cr.line_to(*points[1])
+        else:
+            # Walk to midpoint of first pair, then use midpoint Bézier smoothing.
+            # Each curve segment ends at the midpoint between two consecutive points,
+            # using the intermediate point as the quadratic control — this produces
+            # a smooth C1-continuous path with no visible corners at sample points.
+            m0x = (points[0][0] + points[1][0]) / 2
+            m0y = (points[0][1] + points[1][1]) / 2
+            cr.line_to(m0x, m0y)
+            for i in range(1, n - 1):
+                mx = (points[i][0] + points[i + 1][0]) / 2
+                my = (points[i][1] + points[i + 1][1]) / 2
+                cx, cy = points[i]
+                cr.curve_to(cx, cy, cx, cy, mx, my)
+            cr.line_to(*points[-1])
+        cr.stroke()
 
     # ------------------------------------------------------------------
     # Events
