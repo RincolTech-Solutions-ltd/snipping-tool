@@ -328,12 +328,15 @@ class AnnotationCanvas(Gtk.DrawingArea):
 # ---------------------------------------------------------------------------
 
 COLORS = [
-    ("Red",    (1.0, 0.0, 0.0, 1.0)),
-    ("Blue",   (0.0, 0.4, 1.0, 1.0)),
-    ("Green",  (0.0, 0.7, 0.2, 1.0)),
-    ("Yellow", (1.0, 0.9, 0.0, 1.0)),
-    ("Black",  (0.0, 0.0, 0.0, 1.0)),
-    ("White",  (1.0, 1.0, 1.0, 1.0)),
+    ("Red",    (1.0,  0.0,  0.0,  1.0)),
+    ("Orange", (1.0,  0.5,  0.0,  1.0)),
+    ("Yellow", (1.0,  0.9,  0.0,  1.0)),
+    ("Green",  (0.0,  0.7,  0.2,  1.0)),
+    ("Cyan",   (0.0,  0.85, 1.0,  1.0)),
+    ("Blue",   (0.0,  0.4,  1.0,  1.0)),
+    ("Violet", (0.56, 0.0,  1.0,  1.0)),
+    ("Black",  (0.0,  0.0,  0.0,  1.0)),
+    ("White",  (1.0,  1.0,  1.0,  1.0)),
 ]
 
 TOOLS = [
@@ -448,12 +451,16 @@ class EditorWindow(Gtk.Window):
             if tool_group is None:
                 tool_group = btn
             btn.set_mode(False)
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
             try:
                 img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.SMALL_TOOLBAR)
-                btn.add(img)
-                btn.set_tooltip_text(label)
+                box.pack_start(img, False, False, 0)
             except Exception:
-                btn.set_label(label[:3])
+                pass
+            lbl = Gtk.Label(label=label)
+            box.pack_start(lbl, False, False, 0)
+            btn.add(box)
+            btn.set_tooltip_text(label)
             btn.connect("toggled", self._on_tool_toggled, tool_id)
             bar.pack_start(btn, False, False, 0)
             self._tool_buttons[tool_id] = btn
